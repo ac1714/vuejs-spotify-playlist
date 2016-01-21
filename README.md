@@ -1,1 +1,1 @@
-"# vuejs-spotify-playlist" 
+# vuejs-spotify-playlist
