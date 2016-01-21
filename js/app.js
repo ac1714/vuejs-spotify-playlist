@@ -91,9 +91,8 @@ module.exports = function() {
 				// triggered when the related artists top tracks have been fetched
 				'topTracksFetched': function(tracks) {
 					var tracks = this.transformTracks(tracks);
-					tracks = _.uniqBy(tracks, 'artist_id');
-
 					this.$set('topTracks', this.shuffleArray(tracks));
+					tracks = _.uniqBy(tracks, 'artist_id');
 
 					this.topTrackIds.uris = this.topTracks.map(function(t) { return t.uri; });
 
