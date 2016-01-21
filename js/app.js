@@ -2,6 +2,7 @@ var Spotify = require('spotify-web-api-js');
 var Vue = require('vue');
 var _ = require('lodash');
 var Q = require('Q');
+var swal = require('sweetalert');
 
 module.exports = function() {
 
@@ -13,8 +14,8 @@ module.exports = function() {
 			queryParams: {
 				client_id: 'abc15734545043d4a744e4925027e3d4',
 				response_type: 'token',
-				redirect_uri: 'http://johanneseriksson.se/vuejs-spotify-playlist',
-				scope: 'playlist-read-private playlist-modify-private user-follow-read playlist-read-collaborative',
+				redirect_uri: 'http://playlist.dev/',
+				scope: 'playlist-read-private playlist-modify-public user-follow-read playlist-read-collaborative',
 				state: ''
 			},
 			redirectUrl: 'https://accounts.spotify.com/authorize?',
@@ -41,12 +42,16 @@ module.exports = function() {
 				artistIds: [],
 				relatedArtistsIds: [],
 				topTracks: [],
+				topTrackIds: {
+					uris: []
+				},
 				audioSource: '',
 				currentTrack: {},
 				status: {
 					loading: false,
 					task: ''
-				}
+				},
+				playlistHasBeenSaved: false
 			},
 
 			events: {
@@ -89,6 +94,9 @@ module.exports = function() {
 					tracks = _.uniqBy(tracks, 'artist_id');
 
 					this.$set('topTracks', this.shuffleArray(tracks));
+
+					this.topTrackIds.uris = this.topTracks.map(function(t) { return t.uri; });
+
 					this.status.loading = false;
 				},
 
@@ -248,6 +256,7 @@ module.exports = function() {
 							duration: this.millisToMinutesAndSeconds(obj.duration_ms),
 							type: obj.type,
 							id: obj.id,
+							uri: obj.uri,
 							thumbnail: obj.album.images[2] ? obj.album.images[2].url : 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mN49uz/fwAJTAPLQuEFBAAAAABJRU5ErkJggg=='
 						});
 					}
@@ -271,6 +280,8 @@ module.exports = function() {
 
 					var self = this;
 					
+					this.playlistHasBeenSaved = false;
+					this.topTrackIds.uris = [];
 					this.artistIds = [];
 					this.status.loading = true;
 					this.status.task = 'Fetching user info..';
@@ -422,6 +433,69 @@ module.exports = function() {
 					}
 				},
 
+				savePlaylist: function() {
+					var self = this;					
+
+					swal({   
+						title: "Playlist name",
+						text: "Enter a name:",
+						type: "input",
+						showCancelButton: true,
+						closeOnConfirm: false,
+						showLoaderOnConfirm: true,
+						animation: "slide-from-top",
+						inputPlaceholder: "name"
+					}, function(inputValue){
+							if (inputValue === false) return false;
+							if (inputValue === "") {
+								swal.showInputError("You have to enter a name!");
+								return false   
+							}
+							var trackIds = self.topTracks.map(function(t) { return t.id; });
+
+							function handleSuccess() {
+								return swal({
+											title: "Success!",
+											text: "The playlist was saved",
+											type: "success",
+											showConfirmButton: false,
+											timer: 900
+										});
+							}
+
+							function handleError() {
+								return swal("Something went wrong!", "Try again", "error");
+							}							
+
+							self.spotifyApi.createPlaylist(self.userId, {name: inputValue})
+							.then(function(response) {
+								if (response.id) {
+									var playlistId = response.id;
+									var userId = self.userId;
+									var uris = self.topTrackIds.uris;
+
+									self.spotifyApi.addTracksToPlaylist(userId, playlistId, uris)
+									.then(function(response) {
+										console.log(response);
+										if (response.snapshot_id) {
+											self.playlistHasBeenSaved = true;
+											return handleSuccess();
+										}
+									})
+									.catch(function(error) {
+										console.log(error);
+										return handleError();
+									});
+								}
+							})
+							.catch(function(error) {
+								console.log(error);
+								return handleError();
+							});
+						}
+					);
+				},
+
 
 				/**
 
@@ -465,7 +539,6 @@ module.exports = function() {
 			ready: function() {
 
 				if (this.verifyAuth()) {
-					window.location.hash = '';
 
 					this.fetchArtistIdsFromUserPlaylists();
 

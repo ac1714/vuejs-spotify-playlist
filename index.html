@@ -10,6 +10,7 @@
 		<link href='https://fonts.googleapis.com/css?family=Open+Sans:400,600' rel='stylesheet' type='text/css'>
 		<link rel="stylesheet" href="node_modules/bootstrap/dist/css/bootstrap.min.css">
 		<link rel="stylesheet" href="node_modules/font-awesome/css/font-awesome.min.css">
+		<link rel="stylesheet" href="node_modules/sweetalert/dist/sweetalert.css">
 		<link rel="stylesheet" href="css/style.css">
 	</head>
 
@@ -17,7 +18,9 @@
 
 	<div id="sign-in" v-show="status.loading || ! userAuthenticated" v-cloak>
 		<div id="sign-in-inner">
-	    	<img src="img/log_in-desktop-large.png" v-on:click="fetchAuth()" v-show="! userAuthenticated" v-cloak>
+			<a href="#" v-on:click="fetchAuth()" v-show="! userAuthenticated">
+	    		<img src="img/log_in-desktop-large.png" v-cloak>
+	    	</a>
 	    	<h3 v-show="status.loading" v-cloak>{{ status.task }}</h3>
 		</div>
 	</div>
@@ -32,7 +35,11 @@
 						Generate new playlist
 					</button>
 
-					<button class="btn btn-success disabled" v-show="topTracks.length">
+					<button class="btn btn-success" 
+						    v-show="topTracks.length" 
+						    v-on:click="savePlaylist()"
+						    :disabled="playlistHasBeenSaved">
+
 						Save playlist
 					</button>					
 				</div>
