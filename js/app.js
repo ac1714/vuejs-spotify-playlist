@@ -14,7 +14,7 @@ module.exports = function() {
 			queryParams: {
 				client_id: 'abc15734545043d4a744e4925027e3d4',
 				response_type: 'token',
-				redirect_uri: 'http://playlist.dev/',
+				redirect_uri: 'http://johannesss.github.io/vuejs-spotify-playlist/',
 				scope: 'playlist-read-private playlist-modify-public user-follow-read playlist-read-collaborative',
 				state: ''
 			},
