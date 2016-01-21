@@ -270,6 +270,8 @@ module.exports = function() {
 					}
 
 					var self = this;
+					
+					this.artistIds = [];
 					this.status.loading = true;
 					this.status.task = 'Fetching user info..';
 					this.spotifyApi.setPromiseImplementation(Q);
